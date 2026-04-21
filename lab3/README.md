@@ -63,7 +63,7 @@ services:
 ```
 
 #### nginx
-Возвращает server.js 
+минимальный nginx, который проксирует на контейнер с нодой
 
 ```
 # nginx
@@ -105,7 +105,7 @@ http {
 }
 ```
 
-![Результат](/images/image.png)
+![Результат](images/image.png)
 
 ### Настроить принудительное перенаправление HTTP-запросов (порт 80) на HTTPS (порт 443) для обеспечения безопасного соединения
 
@@ -166,16 +166,20 @@ http {
     }
 }
 ```
+**Результат для https://site1.local/index.html**
+
 ![результат](images/image2.png)
+**Результат для https://site1.local/img/cat.png**
+
+![alt text](images/image12.png)
 
 ### Настроить виртуальные хосты для обслуживания нескольких доменных имен на одном сервере.
-Перед тем как выполнить эту задачу добавил несколько loopback'ов в etc/hosts 
+Перед тем как выполнить эту задачу добавил несколько записей в etc/hosts 
 ![alt text](images/image3.png)
 ![alt text](images/image4.png)
 
 ```
 events {
-    worker_connections 1024;
 }
 
 http {
@@ -218,15 +222,18 @@ http {
 }
 
 ```
+**Результат для site1.local**
 
-![результат для site1.local](static/image5.png)
-![результат для site2.local](static/image6.png)
+![результат для site1.local](images/image5.png)
+
+**Результат для site2.local**
+
+![результат для site2.local](images/image6.png)
 
 ### Что угодно еще под требования проекта
 Я решил добавить немного защиты от того стандартных веб уязвимостей
 ```
 events {
-    worker_connections 1024;
 }
 
 http {
@@ -284,9 +291,9 @@ http {
 |-----------|---------|--------------|
 | server_tokens| ![видно версию nginx](images/image7.png)      | ![не видно](images/image8.png)       |
 | clickjacking*     | ![](images/image10.png)      | ![](images/image9.png) |
-| XSS**    |   ![](images/image11.png)    |   [](images/image11.png)     |
+| XSS**    |   ![](images/image11.png)    |    ![](images/image13.png)    |
 
-* для проверки clickjacking попросил нейронку сгенерировать clickjacking.html кторый поверх iframe добавляет навязчивую кнопку
+\* для проверки clickjacking попросил нейронку сгенерировать clickjacking.html кторый поверх iframe добавляет навязчивую кнопку
 
 ** для проверки xxs изменил server.js так чтобы сервер возвращал разметку
 ```
@@ -314,8 +321,74 @@ server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
 ```
-> на уровне nginx X-XSS-Protection просто браузерный костыль, поэтому лучше просто экранировать символы <> на бэке
+> на уровне nginx X-XSS-Protection просто браузерный костыль, поэтому лучше просто экранировать символы <> на бэке. Результат что с этим заголовком, что без исполняется скрипт
 
 
 ## 2 часть
 
+Список эксплойтов
+- раскрытие версии nginx
+- включённый directory listing
+- path traversal
+
+### Лот номер 1
+https://oo.kirov.spb.ru/
+
+- Версия nginx скрыта
+
+![alt text](images/image-1.png)
+
+- Настроена автоиндексация
+как следствие можно всякие приколы вытащить
+
+![alt text](images/image-0.png)
+
+- конец 
+
+![alt text](images/image-2.png) 
+
+### Лот номер 2
+
+https://danceschools.ru/
+
+- видна версия nginx
+![alt text](images/image-3.png)
+
+- directory listing не получилось нащупать
+
+404 бросает
+с www редирект на https://danceschools.ru/
+
+![alt text](images/image-4.png)
+![alt text](images/image-5.png)
+![alt text](images/image-6.png)
+
+> удалось найти api ключ от яндекс мап пока рылся в html чтобы файлики интересные найти 
+
+- path traversal
+
+![alt text](images/image-7.png)
+
+![alt text](images/image-9.png)
+
+присутствует, но прав на чтение нет
+Теоретически можно поискать другие уязвимые файлы типо nginx.conf
+
+### Лот номер 3
+
+https://www.staccatoschool.com
+
+- видна версия nginx, причём старая
+
+![alt text](images/image-11.png)
+
+- Directory listing не получилось нащупать возвращает 404
+
+- path traversal присутствует
+
+![alt text](images/image-12.png)
+
+> не очень интересно получилось тк сам nginx на апач проксирует
+
+# Итоги
+Получилось необычно, но выбранные мной методы расчитаны на брутфорс, поэтому я просто потыкал html файл из него находил потенциальные на уязвимость папки и пробовал что-нибудь с ними сделать. 
