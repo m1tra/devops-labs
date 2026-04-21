@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clickjacking Demo - Educational Purpose</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        /* Контейнер для iframe */
+        .iframe-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        /* Фрейм на весь экран */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        /* Кнопка-ловушка поверх фрейма */
+        .fake-button {
+            position: fixed;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            z-index: 2;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        
+        /* Анимация для привлечения внимания */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                background: rgba(255, 0, 0, 0.8);
+            }
+            50% {
+                transform: scale(1.1);
+                background: rgba(255, 50, 0, 1);
+            }
+            100% {
+                transform: scale(1);
+                background: rgba(255, 0, 0, 0.8);
+            }
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Фрейм на весь экран -->
+    <div class="iframe-container">
+        <iframe src="https://site1.local/index.html"></iframe>
+    </div>
+    
+    <!-- Кнопка-ловушка поверх фрейма -->
+    <button class="fake-button" id="trapButton">
+        🎁 ПОЛУЧИТЬ БОНУС 1000$ 🎁
+    </button>
+
+    
+    <script>
+        // Демонстрация перехвата клика
+        const button = document.getElementById('trapButton');
+        
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Показываем предупреждение
+            const warning = document.createElement('div');
+            warning.textContent = '⚠️ ВНИМАНИЕ! Вы только что кликнули по iframe, а не по кнопке! ⚠️';
+            warning.style.position = 'fixed';
+            warning.style.top = '50%';
+            warning.style.left = '50%';
+            warning.style.transform = 'translate(-50%, -50%)';
+            warning.style.background = 'red';
+            warning.style.color = 'white';
+            warning.style.padding = '20px';
+            warning.style.borderRadius = '10px';
+            warning.style.zIndex = '9999';
+            warning.style.fontSize = '20px';
+            warning.style.fontWeight = 'bold';
+            warning.style.textAlign = 'center';
+            warning.style.boxShadow = '0 0 50px rgba(0,0,0,0.5)';
+            
+            document.body.appendChild(warning);
+            
+            setTimeout(() => {
+                warning.remove();
+            }, 3000);
+        });
+        
+        // Отслеживаем, если iframe загрузился с защитой
+        const iframe = document.querySelector('iframe');
+        iframe.onload = function() {
+            console.log('Iframe загружен');
+        };
+        
+        // Если iframe не загружается из-за X-Frame-Options
+        iframe.onerror = function() {
+            alert('Сайт защищен от clickjacking! (X-Frame-Options: SAMEORIGIN)');
+        };
+    </script>
+    
+</body>
+</html>
