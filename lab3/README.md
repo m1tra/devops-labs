@@ -352,6 +352,7 @@ https://oo.kirov.spb.ru/
 https://danceschools.ru/
 
 - видна версия nginx
+
 ![alt text](images/image-3.png)
 
 - directory listing не получилось нащупать
